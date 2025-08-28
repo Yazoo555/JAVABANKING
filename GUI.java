@@ -27,55 +27,39 @@ public class GUI extends JFrame {
         this.sbAllData = new StringBuilder();
 
         // ===== Show All Section =====
-        showAllData = new JLabel("<Account data appears here>");
+        showAllData = new JLabel();
         showAllData.setBounds(30, 30, 800, 100);
+        updateAccountDisplay(); // show accounts immediately
 
+        // ===== Buttons and Fields =====
         showAllButton = new JButton("Show All Accounts");
         showAllButton.setBounds(30, 140, 200, 30);
 
-        // ===== Deposit Section =====
         JLabel depositLabel = new JLabel("Deposit");
         depositLabel.setBounds(30, 190, 100, 25);
-
-        accDeposit = new JTextField("Enter Account #");
-        accDeposit.setBounds(30, 220, 150, 25);
-
-        depositInput = new JTextField("Enter Amount");
-        depositInput.setBounds(190, 220, 150, 25);
-
+        accDeposit = createTextField("Enter Account #", 30, 220);
+        depositInput = createTextField("Enter Amount", 190, 220);
         depositButton = new JButton("Deposit");
         depositButton.setBounds(350, 220, 100, 25);
 
-        // ===== Withdraw Section =====
         JLabel withdrawLabel = new JLabel("Withdraw");
         withdrawLabel.setBounds(30, 260, 100, 25);
-
-        accWithdraw = new JTextField("Enter Account #");
-        accWithdraw.setBounds(30, 290, 150, 25);
-
-        withdrawInput = new JTextField("Enter Amount");
-        withdrawInput.setBounds(190, 290, 150, 25);
-
+        accWithdraw = createTextField("Enter Account #", 30, 290);
+        withdrawInput = createTextField("Enter Amount", 190, 290);
         withdrawButton = new JButton("Withdraw");
         withdrawButton.setBounds(350, 290, 100, 25);
+ 
+JLabel transferLabel = new JLabel("Transfer");
+transferLabel.setBounds(30, 330, 100, 25);
 
-        // ===== Transfer Section =====
-        JLabel transferLabel = new JLabel("Transfer");
-        transferLabel.setBounds(30, 330, 100, 25);
+acc1Transfer = createTextField("From Account #", 30, 360);
+acc2Transfer = createTextField("To Account #", 200, 360);
+transferAmount = createTextField("Amount", 370, 360);
+transferButton = new JButton("Transfer");
+transferButton.setBounds(540, 360, 100, 25);
 
-        acc1Transfer = new JTextField("From Account #");
-        acc1Transfer.setBounds(30, 360, 130, 25);
 
-        acc2Transfer = new JTextField("To Account #");
-        acc2Transfer.setBounds(170, 360, 130, 25);
-
-        transferAmount = new JTextField("Amount");
-        transferAmount.setBounds(310, 360, 100, 25);
-
-        transferButton = new JButton("Transfer");
-        transferButton.setBounds(420, 360, 100, 25);
-
-        // ===== Add Components =====
+        // ===== Add to GUI =====
         add(showAllData); add(showAllButton);
         add(depositLabel); add(accDeposit); add(depositInput); add(depositButton);
         add(withdrawLabel); add(accWithdraw); add(withdrawInput); add(withdrawButton);
@@ -89,17 +73,39 @@ public class GUI extends JFrame {
         transferButton.addActionListener(handler);
     }
 
+    private JTextField createTextField(String placeholder, int x, int y) {
+        JTextField tf = new JTextField(placeholder);
+        tf.setBounds(x, y, 150, 25);
+        tf.addFocusListener(new FocusAdapter() {
+            public void focusGained(FocusEvent e) {
+                if (tf.getText().equals(placeholder)) {
+                    tf.setText("");
+                }
+            }
+            public void focusLost(FocusEvent e) {
+                if (tf.getText().isEmpty()) {
+                    tf.setText(placeholder);
+                }
+            }
+        });
+        return tf;
+    }
+
+    private void updateAccountDisplay() {
+        StringBuilder sb = new StringBuilder();
+        for (Account acc : globalAccounts) {
+            sb.append(acc.getFirstName()).append(" ")
+              .append(acc.getLastName()).append(" - Account No: ")
+              .append(acc.getAccountNum()).append(" - Balance: ")
+              .append(acc.getBalance()).append("<br>");
+        }
+        showAllData.setText("<html>" + sb.toString() + "</html>");
+    }
+
     private class HandlerClass implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == showAllButton) {
-                StringBuilder sb = new StringBuilder();
-                for (Account acc : globalAccounts) {
-                    sb.append(acc.getFirstName()).append(" ")
-                      .append(acc.getLastName()).append(" - Acc#")
-                      .append(acc.getAccountNum()).append(" - Balance: ")
-                      .append(acc.getBalance()).append("<br>");
-                }
-                showAllData.setText("<html>" + sb.toString() + "</html>");
+                updateAccountDisplay();
             }
 
             if (e.getSource() == depositButton) {
@@ -110,6 +116,7 @@ public class GUI extends JFrame {
                         if (acc.getAccountNum() == accNum) {
                             acc.deposit(amt);
                             writer.saveAccounts(globalAccounts);
+                            updateAccountDisplay();
                             break;
                         }
                     }
@@ -127,6 +134,7 @@ public class GUI extends JFrame {
                             if (acc.getBalance() >= amt) {
                                 acc.withdraw(amt);
                                 writer.saveAccounts(globalAccounts);
+                                updateAccountDisplay();
                             } else {
                                 JOptionPane.showMessageDialog(null, "Insufficient funds.");
                             }
@@ -155,6 +163,7 @@ public class GUI extends JFrame {
                         if (accFrom.getBalance() >= amt) {
                             transferObject.transfer(accFrom, accTo, amt);
                             writer.saveAccounts(globalAccounts);
+                            updateAccountDisplay();
                         } else {
                             JOptionPane.showMessageDialog(null, "Insufficient funds for transfer.");
                         }
